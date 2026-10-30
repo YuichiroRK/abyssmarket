@@ -45,7 +45,8 @@
 ## Publicación del núcleo fase 1
 
 - Rama de trabajo: `feat/nucleo-fase-1`.
-- Estado: implementación y verificaciones completadas; commits/push pendientes.
+- Commits: `9cd83ab` (`Implementa núcleo inicial de fase 1`) y `af94718` (`Actualiza guía y adapta skill GodMode a OpenCode`).
+- Push: completado a GitHub en `feat/nucleo-fase-1`; el historial remoto contiene ambos commits.
 
 ## Verificaciones realizadas
 
