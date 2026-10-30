@@ -33,6 +33,12 @@
    - [ ] Ejecutar las verificaciones disponibles y corregir fallos.
    - [ ] Revisar el diff, crear commits pequeños en español en una rama de funcionalidad y subirlos a `origin` si el remoto sigue disponible.
 
+## Publicación de esta entrega
+
+- Rama: `feat/base-dockerizada`.
+- Commits: `3321dbe` (`Prepara servicios Rust en Docker`) y `ace624b` (`Documenta plan y decisiones de arquitectura`).
+- Push a `origin`: pendiente.
+
 ## Verificaciones realizadas
 
 - `docker compose -f deploy/docker-compose.yml config --quiet` — pasó.
