@@ -11,11 +11,26 @@ path = "src/bin/api.rs"
 name = "expedition-worker"
 path = "src/bin/expedition-worker.rs"
 
+[[bin]]
+name = "migrate"
+path = "src/bin/migrate.rs"
+
 [dependencies]
 anyhow = "1"
+argon2 = "0.5"
 axum = "0.8"
+base64 = "0.22"
 dotenvy = "0.15"
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres"] }
-tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+hex = "0.4"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "json"] }
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

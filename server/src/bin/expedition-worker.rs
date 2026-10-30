@@ -7,10 +7,6 @@ async fn main() -> Result<()> {
     init_tracing();
 
     let config = Config::from_env()?;
-    let _database = connect_database(&config).await?;
-    tracing::info!("worker de expediciones iniciado; resolución de expediciones pendiente");
-
-    tokio::signal::ctrl_c().await?;
-    tracing::info!("worker de expediciones detenido");
-    Ok(())
+    let database = connect_database(&config).await?;
+    abyssmarket_server::worker::run(database).await
 }

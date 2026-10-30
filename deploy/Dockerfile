@@ -3,6 +3,7 @@ WORKDIR /app/server
 COPY server/Cargo.toml ./Cargo.toml
 COPY server/Cargo.lock ./Cargo.lock
 COPY server/src ./src
+COPY server/migrations ./migrations
 RUN cargo build --locked --release --bins
 
 FROM debian:bookworm-slim
@@ -12,6 +13,7 @@ RUN apt-get update \
     && useradd --system --uid 10001 app
 COPY --from=builder /app/server/target/release/api /usr/local/bin/api
 COPY --from=builder /app/server/target/release/expedition-worker /usr/local/bin/expedition-worker
+COPY --from=builder /app/server/target/release/migrate /usr/local/bin/migrate
 USER app
 EXPOSE 3000
 ENTRYPOINT ["/usr/local/bin/api"]

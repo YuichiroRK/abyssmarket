@@ -4,8 +4,13 @@ use anyhow::{Context, Result};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tracing_subscriber::EnvFilter;
 
+pub mod api;
+pub mod expeditions;
+pub mod worker;
+
 pub struct Config {
     pub bind_addr: SocketAddr,
+    pub expedition_seconds_per_depth: i64,
     database_url: String,
 }
 
@@ -16,9 +21,17 @@ impl Config {
             .parse()
             .with_context(|| format!("BIND_ADDR debe ser una dirección válida: {bind_addr}"))?;
         let database_url = env::var("DATABASE_URL").context("falta la variable DATABASE_URL")?;
+        let expedition_seconds_per_depth = env::var("EXPEDITION_SECONDS_PER_DEPTH")
+            .unwrap_or_else(|_| "60".to_owned())
+            .parse::<i64>()
+            .context("EXPEDITION_SECONDS_PER_DEPTH debe ser un entero")?;
+        if !(1..=86_400).contains(&expedition_seconds_per_depth) {
+            anyhow::bail!("EXPEDITION_SECONDS_PER_DEPTH debe estar entre 1 y 86400");
+        }
 
         Ok(Self {
             bind_addr,
+            expedition_seconds_per_depth,
             database_url,
         })
     }
@@ -39,4 +52,11 @@ pub async fn connect_database(config: &Config) -> Result<PgPool> {
         .connect(&config.database_url)
         .await
         .context("no se pudo conectar a PostgreSQL")
+}
+
+pub async fn run_migrations(database: &PgPool) -> Result<()> {
+    sqlx::migrate!("./migrations")
+        .run(database)
+        .await
+        .context("no se pudieron aplicar las migraciones")
 }
