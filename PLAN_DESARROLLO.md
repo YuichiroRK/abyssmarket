@@ -28,16 +28,16 @@
    - [ ] Añadir mercado/fabricación y luego jefes en vivo según la hoja de ruta; incorporar Redis cuando haga falta.
 5. **Contenido y operación — pendiente**
    - [ ] Evaluar Rails, Neo4j, backups diarios y despliegue público en su fase correspondiente, midiendo recursos antes de sumar servicios.
-6. **Cierre y publicación — pendiente**
-   - [ ] Actualizar este archivo con resultados y pendientes reales.
-   - [ ] Ejecutar las verificaciones disponibles y corregir fallos.
-   - [ ] Revisar el diff, crear commits pequeños en español en una rama de funcionalidad y subirlos a `origin` si el remoto sigue disponible.
+6. **Publicación incremental — en marcha**
+   - [x] Actualizar este archivo con resultados y pendientes reales de cada entrega.
+   - [x] Ejecutar las verificaciones disponibles y corregir fallos para la base Dockerizada.
+   - [x] Revisar el diff, crear commits pequeños en español en una rama de funcionalidad y subir esta entrega a GitHub.
 
 ## Publicación de esta entrega
 
 - Rama: `feat/base-dockerizada`.
-- Commits: `3321dbe` (`Prepara servicios Rust en Docker`) y `ace624b` (`Documenta plan y decisiones de arquitectura`).
-- Push a `origin`: pendiente.
+- Commits iniciales: `3321dbe` (`Prepara servicios Rust en Docker`), `ace624b` (`Documenta plan y decisiones de arquitectura`) y `500d63d` (`Registra commits de la entrega inicial`).
+- Push: completado a GitHub en `feat/base-dockerizada`; el historial de la rama registra los commits correspondientes.
 
 ## Verificaciones realizadas
 
