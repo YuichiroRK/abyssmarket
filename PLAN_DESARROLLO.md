@@ -1,17 +1,18 @@
 # Plan de desarrollo — Mercado del Abismo
 
-**Estado:** base Dockerizada completada · sigue pendiente la primera mecánica jugable.
+**Estado:** base del backend Dockerizada · siguen pendientes la primera mecánica jugable y el cliente.
 
 ## Decisiones confirmadas
 
 - Avanzar por entregas pequeñas, empezando por la fase 1.
 - Desplegar API y worker de expediciones como dos servicios Rust en Docker Compose; PostgreSQL compartido. El worker actual es solo un esqueleto y aún no procesa expediciones.
+- Todo proceso de ejecución que se incorpore debe tener su servicio/contenedor Compose; el cliente también se dockerizará cuando se añada.
 - Usar nombres SQL en inglés y permitir registro abierto.
 - Añadir Redis, Rails y Neo4j cuando lleguen sus necesidades. Python, Java y C# quedan fuera hasta definir una función concreta.
 
 ## Pasos y seguimiento
 
-1. **Base Dockerizada — completada**
+1. **Base Dockerizada del backend — completada**
    - [x] API Rust con `/healthz` y `/readyz`.
    - [x] Contenedores API, worker y PostgreSQL; imagen Rust multi-stage y volumen durable para PostgreSQL.
    - [x] Plantilla `.env.example`; PostgreSQL se publica en `127.0.0.1:5433` para evitar el puerto 5432 ocupado en este entorno.
@@ -23,7 +24,7 @@
    - [ ] Crear expediciones desde la API y resolverlas desde el worker según `ends_at`, con semilla persistida y eventos reproducibles.
    - [ ] Tests unitarios y de integración para autenticación y expediciones.
 3. **Cliente Phaser — pendiente**
-   - [ ] Iniciar cliente TypeScript/Phaser/Vite y conectar la primera experiencia jugable al servidor.
+   - [ ] Iniciar cliente TypeScript/Phaser/Vite en su contenedor Compose y conectar la primera experiencia jugable al servidor.
 4. **Economía y juego en vivo — pendiente**
    - [ ] Añadir mercado/fabricación y luego jefes en vivo según la hoja de ruta; incorporar Redis cuando haga falta.
 5. **Contenido y operación — pendiente**
