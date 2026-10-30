@@ -66,6 +66,20 @@ async fn account_can_create_and_reproduce_an_expedition(
         .await?;
     assert_eq!(creature_response.status(), StatusCode::CREATED);
 
+    let creature_read = app
+        .clone()
+        .oneshot(json_request(
+            "GET",
+            "/api/creatures/me",
+            Value::Null,
+            Some(&token),
+            false,
+        ))
+        .await?;
+    assert_eq!(creature_read.status(), StatusCode::OK);
+    let creature_json = response_json(creature_read).await?;
+    assert_eq!(creature_json["name"], "Polilla");
+
     let invalid_depth = app
         .clone()
         .oneshot(json_request(
@@ -97,6 +111,20 @@ async fn account_can_create_and_reproduce_an_expedition(
         .as_i64()
         .ok_or("missing expedition seed")?;
 
+    let latest_running = app
+        .clone()
+        .oneshot(json_request(
+            "GET",
+            "/api/expeditions/latest",
+            Value::Null,
+            Some(&token),
+            false,
+        ))
+        .await?;
+    let latest_running = response_json(latest_running).await?;
+    assert_eq!(latest_running["expedition"]["id"], expedition_id);
+    assert_eq!(latest_running["expedition"]["status"], "running");
+
     let second_expedition = app
         .clone()
         .oneshot(json_request(
@@ -118,6 +146,7 @@ async fn account_can_create_and_reproduce_an_expedition(
     assert_eq!(resolve_due_expeditions(&pool).await?, 0);
 
     let details_response = app
+        .clone()
         .oneshot(json_request(
             "GET",
             &format!("/api/expeditions/{expedition_id}"),
@@ -159,6 +188,32 @@ async fn account_can_create_and_reproduce_an_expedition(
         details["events"][0]["loot"][0]["quantity"],
         expected_reward.quantity
     );
+
+    let latest_completed = app
+        .clone()
+        .oneshot(json_request(
+            "GET",
+            "/api/expeditions/latest",
+            Value::Null,
+            Some(&token),
+            false,
+        ))
+        .await?;
+    let latest_completed = response_json(latest_completed).await?;
+    assert_eq!(latest_completed["expedition"]["status"], "completed");
+
+    let inventory_response = app
+        .oneshot(json_request(
+            "GET",
+            "/api/inventory",
+            Value::Null,
+            Some(&token),
+            false,
+        ))
+        .await?;
+    let inventory_json = response_json(inventory_response).await?;
+    assert_eq!(inventory_json[0]["slug"], expected_reward.item_slug);
+    assert_eq!(inventory_json[0]["quantity"], expected_reward.quantity);
 
     let inventory_quantity: i64 =
         sqlx::query_scalar("SELECT quantity FROM inventory WHERE player_id = $1 AND item_id = $2")

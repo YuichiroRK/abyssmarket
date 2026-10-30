@@ -90,7 +90,10 @@ pub fn router(database: PgPool, expedition_seconds_per_depth: i64) -> Router {
         .route("/api/auth/login", post(login))
         .route("/api/auth/session", axum::routing::delete(logout))
         .route("/api/creatures", post(create_creature))
+        .route("/api/creatures/me", get(get_creature))
+        .route("/api/inventory", get(get_inventory))
         .route("/api/expeditions", post(create_expedition))
+        .route("/api/expeditions/latest", get(get_latest_expedition))
         .route("/api/expeditions/{expedition_id}", get(get_expedition))
         .layer(axum::extract::DefaultBodyLimit::max(4096))
         .with_state(state)
@@ -199,12 +202,21 @@ fn validate_password(password: &str) -> bool {
     (12..=128).contains(&password.len())
 }
 
+fn client_ip(headers: &HeaderMap, address: SocketAddr) -> IpAddr {
+    headers
+        .get("x-real-ip")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse().ok())
+        .unwrap_or_else(|| address.ip())
+}
+
 async fn register(
     State(state): State<AppState>,
     ConnectInfo(address): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(credentials): Json<Credentials>,
 ) -> Result<impl IntoResponse, ApiError> {
-    if !state.rate_limiter.allow(address.ip()) {
+    if !state.rate_limiter.allow(client_ip(&headers, address)) {
         return Err(ApiError::RateLimited);
     }
     if !validate_username(&credentials.username) {
@@ -265,9 +277,10 @@ async fn register(
 async fn login(
     State(state): State<AppState>,
     ConnectInfo(address): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(credentials): Json<Credentials>,
 ) -> Result<Json<SessionResponse>, ApiError> {
-    if !state.rate_limiter.allow(address.ip()) {
+    if !state.rate_limiter.allow(client_ip(&headers, address)) {
         return Err(ApiError::RateLimited);
     }
     if !validate_username(&credentials.username) || !validate_password(&credentials.password) {
@@ -477,6 +490,46 @@ async fn create_creature(
     Ok((StatusCode::CREATED, Json(creature)))
 }
 
+async fn get_creature(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<CreatureResponse>, ApiError> {
+    let player_id = authenticate(&headers, &state.database).await?;
+    let creature = sqlx::query_as::<_, CreatureResponse>(
+        "SELECT id, name, class FROM creatures WHERE player_id = $1",
+    )
+    .bind(player_id)
+    .fetch_optional(&state.database)
+    .await
+    .map_err(|error| database_error(error, "no se pudo consultar la criatura"))?
+    .ok_or(ApiError::NotFound)?;
+    Ok(Json(creature))
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+struct InventoryItemResponse {
+    slug: String,
+    name: String,
+    quantity: i64,
+}
+
+async fn get_inventory(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Vec<InventoryItemResponse>>, ApiError> {
+    let player_id = authenticate(&headers, &state.database).await?;
+    let inventory = sqlx::query_as::<_, InventoryItemResponse>(
+        "SELECT i.slug, i.name, inventory.quantity \
+         FROM inventory JOIN items i ON i.id = inventory.item_id \
+         WHERE inventory.player_id = $1 AND inventory.quantity > 0 ORDER BY i.slug",
+    )
+    .bind(player_id)
+    .fetch_all(&state.database)
+    .await
+    .map_err(|error| database_error(error, "no se pudo consultar el inventario"))?;
+    Ok(Json(inventory))
+}
+
 #[derive(Deserialize)]
 struct CreateExpeditionRequest {
     depth: i16,
@@ -567,16 +620,46 @@ async fn get_expedition(
     .await
     .map_err(|error| database_error(error, "no se pudo consultar la expedición"))?
     .ok_or(ApiError::NotFound)?;
+    let details = load_expedition_details(&state.database, expedition).await?;
+    Ok(Json(details))
+}
+
+async fn get_latest_expedition(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Json<Option<ExpeditionDetails>>, ApiError> {
+    let player_id = authenticate(&headers, &state.database).await?;
+    let expedition = sqlx::query_as::<_, ExpeditionResponse>(
+        "SELECT id, depth, seed, status, ends_at::text AS ends_at \
+         FROM expeditions WHERE player_id = $1 ORDER BY starts_at DESC LIMIT 1",
+    )
+    .bind(player_id)
+    .fetch_optional(&state.database)
+    .await
+    .map_err(|error| database_error(error, "no se pudo consultar la expedición"))?;
+
+    match expedition {
+        Some(expedition) => Ok(Json(Some(
+            load_expedition_details(&state.database, expedition).await?,
+        ))),
+        None => Ok(Json(None)),
+    }
+}
+
+async fn load_expedition_details(
+    database: &PgPool,
+    expedition: ExpeditionResponse,
+) -> Result<ExpeditionDetails, ApiError> {
     let events = sqlx::query_as::<_, ExpeditionEventResponse>(
         "SELECT tick, description, loot, created_at::text AS created_at \
          FROM expedition_events WHERE expedition_id = $1 ORDER BY tick",
     )
-    .bind(expedition_id)
-    .fetch_all(&state.database)
+    .bind(expedition.id)
+    .fetch_all(database)
     .await
     .map_err(|error| database_error(error, "no se pudieron consultar los eventos"))?;
 
-    Ok(Json(ExpeditionDetails { expedition, events }))
+    Ok(ExpeditionDetails { expedition, events })
 }
 
 #[cfg(test)]

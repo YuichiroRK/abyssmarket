@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#100d1d" />
+    <meta name="description" content="Explora el Mercado del Abismo con tu criatura." />
+    <title>Mercado del Abismo</title>
+  </head>
+  <body>
+    <main id="app">
+      <section id="auth-panel" class="panel auth-panel">
+        <p class="eyebrow">CIUDAD BAJO LA LLUVIA</p>
+        <h1>Mercado <span>del Abismo</span></h1>
+        <p class="muted">Entra al mercado nocturno y prepara tu primera expedición.</p>
+        <form id="auth-form">
+          <label for="username">Nombre de usuario</label>
+          <input id="username" name="username" minlength="3" maxlength="24" pattern="[a-z0-9_]+" autocomplete="username" required />
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" minlength="12" maxlength="128" autocomplete="current-password" required />
+          <button id="auth-submit" class="button primary" type="submit">Entrar</button>
+        </form>
+        <button id="auth-mode" class="text-button" type="button">¿Primera vez? Crear una cuenta</button>
+        <p id="auth-error" class="error" role="alert" aria-live="polite"></p>
+      </section>
+
+      <section id="game-panel" class="game-panel" hidden>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">PUESTO NOCTURNO</p>
+            <h1>Mercado <span>del Abismo</span></h1>
+          </div>
+          <button id="logout" class="button secondary" type="button">Salir</button>
+        </header>
+
+        <div class="game-layout">
+          <section class="game-column">
+            <div id="abyss-canvas" class="canvas-frame" aria-label="Vista de tu criatura y el abismo"></div>
+            <p class="muted game-caption">Tus decisiones se validan en el servidor. La expedición avanza aunque cierres esta ventana.</p>
+          </section>
+
+          <aside class="controls-column">
+            <section class="panel">
+              <p class="eyebrow">TU CRIATURA</p>
+              <div id="creature-summary" class="muted">Cargando…</div>
+              <form id="creature-form" hidden>
+                <label for="creature-name">Nombre</label>
+                <input id="creature-name" name="name" maxlength="32" required />
+                <label for="creature-class">Clase</label>
+                <select id="creature-class" name="class">
+                  <option value="explorer">Exploradora</option>
+                  <option value="tank">Tanque</option>
+                  <option value="hacker">Hackeadora</option>
+                </select>
+                <button class="button primary" type="submit">Crear criatura</button>
+              </form>
+              <p id="creature-error" class="error" role="alert" aria-live="polite"></p>
+            </section>
+
+            <section class="panel">
+              <p class="eyebrow">EXPEDICIÓN</p>
+              <form id="expedition-form">
+                <label for="depth">Profundidad</label>
+                <select id="depth" name="depth">
+                  <option value="1">Piso 1 · Umbral de ecos</option>
+                  <option value="2">Piso 2 · Veta de neón</option>
+                  <option value="3">Piso 3 · Archivo hundido</option>
+                </select>
+                <button id="expedition-submit" class="button primary" type="submit">Enviar al abismo</button>
+              </form>
+              <p id="expedition-status" class="status" aria-live="polite">Todavía no hay expediciones.</p>
+              <p id="expedition-error" class="error" role="alert" aria-live="polite"></p>
+            </section>
+
+            <section class="panel">
+              <p class="eyebrow">MOCHILA</p>
+              <ul id="inventory-list" class="inventory-list"><li class="muted">Vacía por ahora</li></ul>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

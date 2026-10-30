@@ -59,5 +59,17 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  client:
+    image: abyssmarket-client:dev
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CLIENT_HOST_PORT:-4173}:80"
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   postgres_data:
